@@ -52,43 +52,46 @@ class WindowManager {
     private lazy var translationState = TranslationState()
     
     func showDictionary(text: String, location: NSPoint, highlightRect: NSRect?) {
-        if dictionaryWindow == nil {
-            // window
-            let window = BorderlessWindow(
-                contentRect: .zero,
-                styleMask: .borderless,
-                backing: .buffered,
-                defer: false
-            )
-            window.backgroundColor = .clear
-            window.isOpaque = false
-            window.hasShadow = false
-            window.level = .floating
-            window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+            if dictionaryWindow == nil {
+                // window
+                let window = BorderlessWindow(
+                    contentRect: .zero,
+                    styleMask: .borderless,
+                    backing: .buffered,
+                    defer: false
+                )
+                window.backgroundColor = .clear
+                window.isOpaque = false
+                window.hasShadow = false
+                window.level = .floating
+                window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+                
+                // textView
+                let textView = NSTextView(frame: .zero)
+                textView.backgroundColor = .clear
+                textView.isEditable = false
+                textView.isSelectable = true
+                window.contentView = textView
+                
+                self.dictionaryWindow = window
+            }
             
-            // textView
-            let textView = NSTextView(frame: .zero)
-            textView.backgroundColor = .clear
-            textView.isEditable = false
-            textView.isSelectable = true
-            window.contentView = textView
-            
-            self.dictionaryWindow = window
+            handleHighlight(highlightRect: highlightRect, location: location) { popLocation in
+                guard let window = self.dictionaryWindow, let textView = window.contentView as? NSTextView else { return }
+                
+                window.setFrame(NSRect(x: popLocation.x, y: popLocation.y, width: 2, height: 2), display: true)
+                NSApp.activate(ignoringOtherApps: true)
+                window.makeKeyAndOrderFront(nil)
+                
+                textView.string = text
+                // attrString
+                let attrString = NSAttributedString(string: text)
+                
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
+                    textView.showDefinition(for: attrString, at: NSPoint(x: 1, y: 1))
+                }
+            }
         }
-        
-        handleHighlight(highlightRect: highlightRect, location: location) { popLocation in
-            guard let window = self.dictionaryWindow, let textView = window.contentView as? NSTextView else { return }
-            
-            window.setFrame(NSRect(x: popLocation.x, y: popLocation.y, width: 2, height: 2), display: true)
-            NSApp.activate(ignoringOtherApps: true)
-            window.makeKeyAndOrderFront(nil)
-            
-            textView.string = text
-            // attrString
-            let attrString = NSAttributedString(string: text)
-            textView.showDefinition(for: attrString, at: NSPoint(x: 1, y: 1))
-        }
-    }
     
     func showTranslation(text: String, location: NSPoint) {
         guard #available(macOS 14.4, *) else { return }
