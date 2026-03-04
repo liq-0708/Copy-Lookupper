@@ -9,9 +9,15 @@ import SwiftUI
 
 @main
 struct Copy_LookupperApp: App {
+    // appState
+    @StateObject private var appState = AppState()
+
     var body: some Scene {
-        WindowGroup {
-            ContentView()
+        MenuBarExtra("Copy Lookupper", systemImage: "doc.text.magnifyingglass") {
+            Button("Quit") {
+                NSApplication.shared.terminate(nil)
+            }
+            .keyboardShortcut("q")
         }
     }
 }
